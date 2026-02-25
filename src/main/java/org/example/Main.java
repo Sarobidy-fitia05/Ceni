@@ -1,37 +1,33 @@
 package org.example;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
         DBConnection db = new DBConnection();
-        DataRetriever data = new DataRetriever(db);
 
-        try {
+        // On récupère la connexion une seule fois
+        try (Connection conn = db.getConnection()) {
+            if (conn == null) {
+                System.err.println("Échec de la connexion à la base de données.");
+                return;
+            }
+
+            DataRetriever data = new DataRetriever(db);
+
+            // --- Question 1 ---
             System.out.println("***************Question 1***************");
-            long total = data.countAllVotes();
-            System.out.println("totalVote=" + total);
+            System.out.println("totalVote=" + data.countAllVotes());
 
-        } catch (SQLException e) {
-            System.err.println("Erreur de base de données : " + e.getMessage());
-        }
-        try {
-            System.out.println("***************Question 2***************");
-            List<VoteTypeCount> list = data.countVotesByType();
-            System.out.println(list);
+            // --- Question 2 ---
+            System.out.println("\n***************Question 2***************");
+            System.out.println(data.countVotesByType());
 
-        } catch (SQLException e) {
-            System.err.println("Erreur de base de données : " + e.getMessage());
-        }
-        try {
-
-            System.out.println("***************Question 3***************");
+            // --- Question 3 ---
+            System.out.println("\n***************Question 3***************");
             List<CandidateVoteCount> results = data.countValidVotesByCandidate();
-
-            // Affichage personnalisé
             System.out.print("[");
             for (int i = 0; i < results.size(); i++) {
                 CandidateVoteCount c = results.get(i);
@@ -40,48 +36,25 @@ public class Main {
             }
             System.out.println("]");
 
-        } catch (SQLException e) {
-            System.err.println("Erreur SQL : " + e.getMessage());
-        }
+            // --- Question 4 ---
+            System.out.println("\n***************Question 4***************");
+            System.out.println(data.computeVoteSummary());
 
-        try {
+            // --- Question 5 ---
+            System.out.println("\n***************Question 5***************");
+            data.displayTurnoutDetails();
 
-            System.out.println("***************Question 4***************");
-            VoteSummary summary = data.computeVoteSummary();
-
-            // L'affichage du record appellera automatiquement sa méthode toString()
-            System.out.println(summary);
-            // Résultat attendu : VoteSummary[validCount=3, blankCount=2, nullCount=1]
-
-        } catch (SQLException e) {
-            System.err.println("Erreur : " + e.getMessage());
-        }
-
-        try {
-
-            System.out.println("***************Question 5***************");
-            double rate = data.computeTurnoutRate();
-
-            // Affichage simple
-            System.out.println("Taux de participation = " + (int)rate + "%");
-
-        } catch (SQLException e) {
-            System.err.println("Erreur : " + e.getMessage());
-        }
-
-        try {
-
-            System.out.println("***************Question 6***************");
+            // --- Question 6 ---
+            System.out.println("\n***************Question 6***************");
             ElectionResult winner = data.findWinner();
-
             if (winner != null) {
                 System.out.println(winner.getCandidateName() + " | " + winner.getValidVoteCount());
             } else {
-                System.out.println("Aucun vainqueur (pas de votes valides).");
+                System.out.println("Aucun vainqueur.");
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur : " + e.getMessage());
+            System.err.println("ERREUR GÉNÉRALE SQL : " + e.getMessage());
         }
     }
 }

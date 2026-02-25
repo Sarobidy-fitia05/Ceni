@@ -94,9 +94,12 @@ public class DataRetriever {
         }
         return new VoteSummary(0, 0, 0);
     }
-    public double computeTurnoutRate() throws SQLException {
+    public void displayTurnoutDetails() throws SQLException {
         String sql = """
-        SELECT (COUNT(*)::FLOAT / (SELECT COUNT(*) FROM voter)) * 100 AS turnout_rate 
+        SELECT 
+            (SELECT COUNT(id) FROM voter) AS total_voters,
+            (SELECT COUNT(id) FROM vote) AS total_votes,
+            (COUNT(id)::FLOAT / (SELECT COUNT(id) FROM voter)) * 100 AS rate
         FROM vote
         """;
 
@@ -105,10 +108,15 @@ public class DataRetriever {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             if (rs.next()) {
-                return rs.getDouble("turnout_rate");
+                long totalVoters = rs.getLong("total_voters");
+                long totalVotes = rs.getLong("total_votes");
+                double rate = rs.getDouble("rate");
+
+                System.out.println("● Nombre total d’électeurs : " + totalVoters);
+                System.out.println("● Nombre de votes enregistrés : " + totalVotes);
+                System.out.println("Donc taux de participations = " + (int)rate + "%");
             }
         }
-        return 0.0;
     }
     public ElectionResult findWinner() throws SQLException {
         // On sélectionne le nom et on compte les votes valides
